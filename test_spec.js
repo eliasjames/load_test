@@ -1,5 +1,5 @@
 var frisbee = require('frisby');
-var 
+var async = require('async');
 
 var server = 'https://njs-brexanshs.saplinglearning.me';
 
@@ -11,9 +11,13 @@ var password = 'fasterthansixmill';
 var assignment_id = 23;
 var item_id = 2;
 
+var locals = {};
+var attempts_param = 5;
+
 function logStatement (opts) {
   console.log(opts.join(', ') + ', ' + Date.now());
 }
+
 
 function getUserId() {
   var user_sql = ['SELECT id from cms.user where username = "' + user_name + '";'];
@@ -76,26 +80,35 @@ function loadQuestion() {
       .after(function (err, res, body) {
         logStatement(['End', 'Load Question', user_name, assignment_id, res.statusCode]);
         var body_json = JSON.parse(body);
-        for (i=0; i<body_json.context.length; i++) {
+        var task_series = [];
+
+        var incorrect_context_found = false;
+        for (i=0; i<body_json.context.length && !incorrect_context_found; i++) {
           if (body_json.context[i].type == "incorrect") {
-            // TODO amend loop to make x number of attempts
-            postAttempt(body_json.context[i]);
+            locals.context = body_json.context[i];
+
+            for (j=0; j<attempts_param; j++) {
+              task_series.push(putAttempt);
+              task_series.push(postAttempt);
+            }
+            incorrect_context_found = true;
           }
         }
+        async.series(task_series);
       })
       .toss();
 }
 
-function makePayload(context, attempt_num) {
-  var context_answer = context.responseData[0];
+function makePayload() {
+  var context_answer = locals.context.responseData[0];
   var payload_answer = {
     "assignment_id": assignment_id,
     "item_id": item_id,
     "is_correct": null,
     "gave_up": null,
-    "context_id": context.id,
+    "context_id": locals.context.id,
     "raw_score": "0.0000",
-    "attempt_num": attempt_num,
+    "attempt_num": 1,
     "answers": {}
   };
   payload_answer['answers'][context_answer.module_id] = {
@@ -107,30 +120,40 @@ function makePayload(context, attempt_num) {
   return payload_answer;
 }
 
-function putAttempt (context, attempt_num) {
+function putAttempt (callback) {
 
   logStatement(['Begin', 'Put Attempt', user_name, assignment_id]);
 
   frisbee.create('Put Attempt')
-    .put(server + '/v2/useritemattempt/', makePayload(context, attempt_num), {json: true})
+    .put(server + '/v2/useritemattempt/', makePayload(), {json: true})
     .auth(user_name, password)
     .after(function (err, res, body) {
       logStatement(['End', 'Put Attempt', user_name, assignment_id, res.statusCode]);
+
+      var body_json = body;
+      if (typeof body == "string") {
+        body_json = JSON.parse(body);
+      }
+
+      callback(null, body_json);
     })
   .toss();
 }
 
-function postAttempt (context) {
+function postAttempt (callback) {
   logStatement(['Begin', 'Post Attempt', user_name, assignment_id]);
 
   frisbee.create('Post Attempt')
-    .put(server + '/v2/useritemattempt/', makePayload(context, null), {json: true})
+    .put(server + '/v2/useritemattempt/', makePayload(), {json: true})
     .auth(user_name, password)
-    .after(function (err, res, body, waitingForResponse) {
-      logStatement(['End', 'Post Attempt', user_name, assignment_id, res.statusCode]);
-      console.log('\n\n\nbad ', body);
-        waitingForResponse();
-        var body_json = JSON.parse(body);
+    .after(function (err, res, body) {
+        logStatement(['End', 'Post Attempt', user_name, assignment_id, res.statusCode]);
+        console.log('\n\n\n', body);
+        var body_json = body;
+        if (typeof body == "string") {
+          body_json = JSON.parse(body);
+        }
+        callback(null, body_json);
     })
   .toss();
 
