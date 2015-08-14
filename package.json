@@ -1,0 +1,17 @@
+{
+  "name": "load_test",
+  "version": "1.0.0",
+  "description": "Load test for Raptor deployment",
+  "main": "test_spec.js",
+  "dependencies": {
+    "async": "^1.4.2",
+    "frisby": "^0.8.5",
+    "jasmine-node": "^1.14.5"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "jasmine-node test_spec.js"
+  },
+  "author": "Elias Carlston",
+  "license": "ISC"
+}

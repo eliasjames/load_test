@@ -1,0 +1,89 @@
+var frisbee = require('frisby');
+
+var server = 'https://njs-brexanshs.saplinglearning.me';
+
+var user_id = 'txmath0001';
+var password = 'fasterthansixmill';
+var assignment_id = 55;
+var item_id = 158;
+
+function logStatement (opts) {
+  console.log(opts.join(', ') + ', ' + Date.now());
+}
+
+function clearAttempts() {
+  var sql = [
+    "SET FOREIGN_KEY_CHECKS=0;",
+    "DELETE FROM falcon.user_assignment_attempt_itemfulfillment    WHERE assignment__id = " + assignment_id + " AND item__id = " + item_id + ";",
+    "DELETE FROM falcon.user_assignment_attempt                    WHERE assignment__id = " + assignment_id + " AND user__id = " + user_id + ";",
+    "DELETE FROM falcon.user_item_attempt                          WHERE item__id =  " + item_id + " AND user__id = " + user_id + ";",
+    "DELETE FROM falcon.UIA_modchoiceset                           WHERE item__id =  " + item_id + " AND user__id = " + user_id + ";",
+    "DELETE FROM falcon.UIA_modnumeric                             WHERE item__id =  " + item_id + " AND user__id = " + user_id + ";",
+    "SET FOREIGN_KEY_CHECKS=1;"
+  ];
+  
+  for(i=0; i<sql.length; i++) {
+    frisbee.create('Clear Attempts')
+      .post(server + '/sqlquery/', {
+        sql: sql
+      })
+      .auth(user_id, password)
+      .after(function (err, res, body) {
+        logStatement(['End', 'Clear Attempts', user_id, assignment_id]);
+        //openAssignment
+      })
+    .toss();
+  }
+}
+
+function openAssignment() {
+  logStatement(['Begin', 'Open Assignment', user_id, assignment_id]);
+
+  frisbee.create('Open Assignment')
+      .post(server + '/v2/assignment/' + assignment_id)
+      .auth(user_id, password)
+      .inspectBody()
+      .after(function (err, res, body) {
+        logStatement(['End', 'Open Assignment', user_id, assignment_id]);
+        //loadQuestion(user_id, password, assignment_id)
+      })
+    .toss();
+}
+
+function loadQuestion() {
+  logStatement(['Begin', 'Load Question', user_id, assignment_id]);
+
+  frisbee.create('Load Question')
+      .get(server + '/v2/student/item/55/158')
+      .auth(user_id, password)
+      .inspectBody()
+      .after(function (err, res, body) {
+        logStatement(['End', 'Load Question', user_id, assignment_id]);
+      })
+      .toss();
+}
+
+openAssignment();
+
+
+////////////////////////////////////////////////////////////
+////
+//// start with params: concurrecy, repeat-question, user, assignment_id
+//// start timer
+//// for each integer in concurrency
+////   pick user
+////   while timer > 0
+////     clear attempts
+////     open an assignment
+////     load a question
+////     loop
+////      check state then
+////        attempt an answer
+////          send correct payload based on module type
+////        try again
+////    give up
+////
+//// record start & end time for each call
+////
+//// NTHs
+//// ramp concurrency
