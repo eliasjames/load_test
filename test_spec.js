@@ -15,6 +15,7 @@ function loadTester() {
     assignment_id: 23,
     item_id: 2,
   
+    attempt_num: 1,
     attempts_param: 5
   };
 
@@ -123,7 +124,7 @@ function loadTester() {
       "gave_up": null,
       "context_id": locals.context.id,
       "raw_score": "0.0000",
-      "attempt_num": 2,
+      "attempt_num": locals.attempt_num,
       "answers": {}
     };
     payload_answer['answers'][context_answer.module_id] = {
@@ -157,7 +158,8 @@ function loadTester() {
 
   function postAttempt (callback) {
     logStatement(['Begin', 'Post Attempt', locals.user_name, locals.assignment_id, null]);
-
+    locals.attempt_num++;
+    
     frisbee.create('Post Attempt')
       .put(locals.server + '/v2/useritemattempt/', makePayload(), {json: true})
       .auth(locals.user_name, locals.password)
@@ -194,7 +196,8 @@ function loadTester() {
 }
 
 var lt = loadTester();
-lt.openAssignment();
+lt.runCycle();
+//lt.openAssignment();
 //lt.getUserId(function () {
 //  lt.clearAttempts();
 //});
