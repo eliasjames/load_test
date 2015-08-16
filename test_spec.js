@@ -159,9 +159,9 @@ function loadTester() {
   function postAttempt (callback) {
     logStatement(['Begin', 'Post Attempt', locals.user_name, locals.assignment_id, null]);
     locals.attempt_num++;
-    
+
     frisbee.create('Post Attempt')
-      .put(locals.server + '/v2/useritemattempt/', makePayload(), {json: true})
+      .post(locals.server + '/v2/useritemattempt/', makePayload(), {json: true})
       .auth(locals.user_name, locals.password)
       .after(function (err, res, body) {
           logStatement(['End', 'Post Attempt', locals.user_name, locals.assignment_id, res]);
