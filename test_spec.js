@@ -4,16 +4,16 @@ var repl = require("repl")
 // solves error caused by self-signed https cert
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-function loadTester() {
+function loadTester(user_num, assignment_id, item_id) {
   var locals = {
     server: 'https://njs-brexanshs.saplinglearning.me',
   
-    user_name: 'txmath0037',
+    user_name: 'txmath' + user_num,
     user_id: 0,
   
     password: 'fasterthansixmill',
-    assignment_id: 23,
-    item_id: 2,
+    assignment_id: assignment_id,
+    item_id: item_id,
   
     attempt_num: 1,
     attempts_param: 5
@@ -195,7 +195,7 @@ function loadTester() {
 
 }
 
-var lt = loadTester();
+var lt = loadTester('0001', 23, 2);
 lt.runCycle();
 //lt.openAssignment();
 //lt.getUserId(function () {
