@@ -91,11 +91,11 @@ var loadTester = function(user_num, assignment_id, item_id) {
         .get(locals.server + '/v2/student/item/' + locals.item_id + '/' + locals.assignment_id)
         .auth(locals.user_name, locals.password)
         .after(function (err, res, body) {
-          logStatement(['End', 'Load Question', locals.user_name, locals.assignment_id, res]);
           console.log(err);
+          locals.attempts_param = locals.attempts_param || 5;
           var body_json = JSON.parse(body);
-
           var task_series = [];
+
           var incorrect_context_found = false;
           for (i=0; i<body_json.context.length && !incorrect_context_found; i++) {
             if (body_json.context[i].type == "incorrect") {
@@ -108,6 +108,7 @@ var loadTester = function(user_num, assignment_id, item_id) {
             }
           }
           async.series(task_series);
+          logStatement(['End', 'Load Question', locals.user_name, locals.assignment_id, res]);
         })
         .toss();
   }
