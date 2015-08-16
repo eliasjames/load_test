@@ -92,7 +92,7 @@ var loadTester = function(user_num, assignment_id, item_id) {
         .auth(locals.user_name, locals.password)
         .after(function (err, res, body) {
           console.log(err);
-          locals.attempts_param = locals.attempts_param || 5;
+          locals.attempts_param = locals.attempts_param || 3000;
           var body_json = JSON.parse(body);
           var task_series = [];
 
