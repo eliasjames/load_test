@@ -1,14 +1,14 @@
 var frisbee = require('frisby');
 var async = require('async');
 
-var loadTester = function(user_num, assignment_id, item_id) {
+var loadTester = function(password, user_num, assignment_id, item_id) {
   var locals = {
     server: 'https://njs-brexanshs.saplinglearning.me',
   
     user_name: 'txmath' + user_num,
     user_id: 0,
   
-    password: 'fasterthansixmill',
+    password: password,
     assignment_id: assignment_id,
     item_id: item_id,
   
@@ -92,7 +92,7 @@ var loadTester = function(user_num, assignment_id, item_id) {
         .auth(locals.user_name, locals.password)
         .after(function (err, res, body) {
           console.log(err);
-          locals.attempts_param = locals.attempts_param || 3000;
+          locals.attempts_param = locals.attempts_param || 3;
           var body_json = JSON.parse(body);
           var task_series = [];
 
@@ -107,7 +107,9 @@ var loadTester = function(user_num, assignment_id, item_id) {
               incorrect_context_found = true;
             }
           }
-          async.series(task_series);
+          async.series(task_series, function() {
+            openAssignment();
+          });
           logStatement(['End', 'Load Question', locals.user_name, locals.assignment_id, res]);
         })
         .toss();
@@ -178,6 +180,7 @@ var loadTester = function(user_num, assignment_id, item_id) {
     getUserId();
     clearAttempts(openAssignment);
   }
+
   return {
     clearAttempts: clearAttempts,
     getUserId: getUserId,

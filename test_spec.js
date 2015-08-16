@@ -1,22 +1,16 @@
 var loadTester = require('./loadTester');
+var config = require('./config');
+
 // solves error caused by self-signed https cert
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 var user_name_num = 0;
 
-function oneUserCycle() {
-  if (user_name_num < 100) {
-    user_name_num++;
-  } else {
-    user_name_num = 1;
-  }
+function oneUserCycle(user_name_num) {
   var user_name_num_padded = padWithZeroes(user_name_num, 4);
-  console.log(user_name_num_padded);
-  var lt = loadTester(user_name_num_padded, 23, 2);
-  var that = this;
-  lt.runCycle(function() {
-    that.call();
-  });
+  //console.log(user_name_num_padded);
+  var lt = loadTester(config.password, user_name_num_padded, 23, 2);
+  lt.runCycle();
 }
 
 function padWithZeroes (some_num, len) {
@@ -27,10 +21,12 @@ function padWithZeroes (some_num, len) {
   return padded;
 }
 
-function burstAnswers () {
-  for (var i=0; i<10; i++){
-    oneUserCycle();
+function tenUsers (which_ten) {
+  for (var i=1; i<10; i++){
+    if (which_ten === 0 && i === 0) i++;
+    oneUserCycle(which_ten + i);
   }
 }
 
-burstAnswers();
+tenUsers(config.which_ten);
+
