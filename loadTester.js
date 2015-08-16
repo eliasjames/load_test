@@ -1,5 +1,7 @@
 var frisbee = require('frisby');
 var async = require('async');
+var fs = require('fs');
+var config = require('./config');
 
 var loadTester = function(password, user_num, assignment_id, item_id) {
   var locals = {
@@ -17,15 +19,24 @@ var loadTester = function(password, user_num, assignment_id, item_id) {
 
   function logStatement (opts) {
     var response = opts[opts.length - 1];
+    var file_name = '' + 'batch_log_' + config.which_ten + '.csv';
+    var log_string;
+
     if (response) {
       if (response.statusCode) {
         opts[opts.length - 1] = response.statusCode;
       }
       if (response.statusCode !== 200) {
-        opts[opts.length] = response.body;
+        opts[opts.length - 1] += ' - ' + response.body;
       }
     }
-    console.log(opts.join(', ') + ', ' + Date.now());
+
+    log_string = opts.join(', ') + ', ' + Date.now() + '\n';
+    fs.appendFileSync(file_name, log_string, {flag: 'a+'}, function (err) {
+      if (err) {
+        return console.log(err);
+      }
+    });
   }
 
   function getUserId(callback) {
@@ -59,6 +70,10 @@ var loadTester = function(password, user_num, assignment_id, item_id) {
         })
         .auth(locals.user_name, locals.password)
         .after(function (err, res, body) {
+          if (err) {
+            console.log(err);
+          }
+
           j++;
           logStatement(['End', 'Execute SQL', locals.user_name, locals.assignment_id, sql_array[j], res]);
           if (j >= sql_array.length) {
@@ -78,6 +93,9 @@ var loadTester = function(password, user_num, assignment_id, item_id) {
         .post(locals.server + '/v2/assignment/' + locals.assignment_id)
         .auth(locals.user_name, locals.password)
         .after(function (err, res, body) {
+          if (err) {
+            console.log(err);
+          }
           logStatement(['End', 'Open Assignment', locals.user_name, locals.assignment_id, res]);
           loadQuestion();
         })
@@ -91,7 +109,10 @@ var loadTester = function(password, user_num, assignment_id, item_id) {
         .get(locals.server + '/v2/student/item/' + locals.item_id + '/' + locals.assignment_id)
         .auth(locals.user_name, locals.password)
         .after(function (err, res, body) {
-          console.log(err);
+          if (err) {
+            console.log(err);
+          }
+
           locals.attempts_param = locals.attempts_param || 3;
           var body_json = JSON.parse(body);
           var task_series = [];
@@ -144,6 +165,10 @@ var loadTester = function(password, user_num, assignment_id, item_id) {
       .put(locals.server + '/v2/useritemattempt/', makePayload(), {json: true})
       .auth(locals.user_name, locals.password)
       .after(function (err, res, body) {
+        if (err) {
+          console.log(err);
+        }
+
         logStatement(['End', 'Put Attempt', locals.user_name, locals.assignment_id, res]);
 
         var body_json = body;
@@ -164,6 +189,10 @@ var loadTester = function(password, user_num, assignment_id, item_id) {
       .post(locals.server + '/v2/useritemattempt/', makePayload(), {json: true})
       .auth(locals.user_name, locals.password)
       .after(function (err, res, body) {
+          if (err) {
+            console.log(err);
+          }
+
           logStatement(['End', 'Post Attempt', locals.user_name, locals.assignment_id, res]);
 
           var body_json = body;
